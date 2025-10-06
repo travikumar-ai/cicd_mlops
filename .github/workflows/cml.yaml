@@ -55,6 +55,7 @@ jobs:
           
           dvc remote add -f origin $DAGSHUB_BUCKET_NAME
           dvc remote modify origin endpointurl $DAGSHUB_ENDPOINT_URL
+          dvc remote modify origin --local auth basic
           dvc remote modify origin --local access_key_id $DAGSHUB_USER_NAME
           dvc remote modify origin --local secret_access_key $DAGSHUB_TOKEN
 
