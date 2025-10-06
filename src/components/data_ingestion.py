@@ -74,6 +74,7 @@ def path_joiner(file_path):
     return os.path.join(cwd, file_path)
     
 def main():
+    
     params_file = os.path.join(os.getcwd(),'config' ,'params.yaml')
     config = yaml.safe_load(open(params_file))
 

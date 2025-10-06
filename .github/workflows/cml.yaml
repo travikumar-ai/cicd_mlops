@@ -1,0 +1,96 @@
+# .github/workflows/cicd.yml
+
+name: MLOps CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+
+jobs:
+  train-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # We need to fetch all branches and history so that DVC can push
+          # changes back to the repository.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13' # Match your project's Python version
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt # Assuming you have a requirements.txt file
+
+      - name: Set up DVC
+        uses: iterative/setup-dvc@v1
+
+      - name: Configure DVC and Git
+        # This step configures DVC to use your remote storage (like S3, GCS, or DagsHub storage)
+        # and sets up Git user for committing back dvc.lock file.
+        env:
+          # Add these as secrets in your GitHub repository settings
+          # (Settings -> Secrets and variables -> Actions)
+          DAGSHUB_USER_NAME: ${{ secrets.DAGSHUB_USER_NAME }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+          DAGSHUB_ACCESS_KEY: ${{secrets.DAGSHUB_ACCESS_KEY}}
+          DAGSHUB_BUCKET_NAME: ${{secrets.DAGSHUB_BUCKET_NAME}}
+          DAGSHUB_ENDPOINT_URL: ${{secrets.DAGSHUB_ENDPOINT_URL}}
+          DAGSHUB_SECRET_KEY: ${{secrets.DAGSHUB_SECRET_KEY}}
+          DAGSHUB_REPO_OWNER: ${{secrets.DAGSHUB_REPO_OWNER}}
+          MLFLOW_TRACKING_PASSWORD: ${{secrets.MLFLOW_TRACKING_PASSWORD}}
+          MLFLOW_TRACKING_URI: ${{secrets.MLFLOW_TRACKING_URI}}
+          MLFLOW_TRACKING_USERNAME: ${{secrets.MLFLOW_TRACKING_USERNAME}}
+          MLFLOW_EXP_NAME: ${{secrets.MLFLOW_EXP_NAME}}
+        run: |
+          # dvc remote add -f origin --local auth basic
+          # dvc remote modify origin --local $DAGSHUB_REPO_OWNER
+          # dvc remote modify origin --local $DAGSHUB_TOKEN 
+          
+          dvc remote add -f origin $DAGSHUB_BUCKET_NAME
+          dvc remote modify origin endpointurl $DAGSHUB_ENDPOINT_URL
+          dvc remote modify origin --local access_key_id $DAGSHUB_USER_NAME
+          dvc remote modify origin --local secret_access_key $DAGSHUB_TOKEN
+
+          # dvc remote add origin 
+          # dvc remote modify origin endpointurl 
+          # dvc remote modify origin --local access_key_id $DAGSHUB_ACCESS_KEY
+          # dvc remote modify origin --local secret_access_key $DAGSHUB_SECRET_KEY
+
+          
+          # Configure Git user
+          git config --global user.email "totakuriravi@gmail.com"
+          git config --global user.name "Ravi Kumar"
+
+      - name: Pull Data and Models with DVC
+        run: dvc pull
+
+      - name: Run MLOps Pipeline
+        env:
+          # MLflow needs these to connect to DagsHub
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: |
+          # Run each stage of your pipeline
+          # python src/components/data_ingestion.py
+          # python src/components/data_transformation.py
+          # python src/components/model_training.py
+          dvc repro
+
+      - name: Push Artifacts to DVC Remote
+        run: |
+          # Add any new or changed artifacts to DVC tracking
+          dvc add artifacts/preprocessor.pkl artifacts/models/
+          dvc push
+          
+          # Commit and push dvc.lock and .dvc files
+          git add artifacts/preprocessor.pkl.dvc artifacts/models.dvc .gitignore
+          git commit -m "CI/CD: Update data and models"
+          git push

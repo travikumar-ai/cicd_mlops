@@ -9,6 +9,7 @@ import mlflow
 import numpy as np
 import pandas as pd
 import yaml
+from dotenv import load_dotenv
 from mlflow.models import infer_signature
 from sklearn.ensemble import (AdaBoostRegressor, GradientBoostingRegressor,
                               RandomForestRegressor)
@@ -23,6 +24,8 @@ from sklearn.tree import DecisionTreeRegressor
 from src.utils import logger
 from src.utils.exception_handling import CustomException
 from src.utils.utilities import save_object
+
+load_dotenv()
 
 # from src.utils.utilities import 
 
@@ -83,7 +86,7 @@ class ModelTrainer:
             raise CustomException(e, sys)
     
     
-    def initiate_model_training(self):
+    def initiate_model_training(self, dagshub_repo_owner, dagshub_repo_name, mlops_exp_name):
         try:
             logging.info('model training started')
             
@@ -128,8 +131,8 @@ class ModelTrainer:
             
             # Disable MLflow model registry calls for DagsHub compatibility
             os.environ["MLFLOW_ENABLE_MODEL_REGISTRY_SQL_BACKEND"] = "false"
-            dagshub.init(repo_owner='travikumar3456', repo_name='mlops-dvc-cicd', mlflow=True)
-            mlflow.set_experiment(experiment_id="1" )
+            dagshub.init(repo_owner=f'{dagshub_repo_owner}', repo_name=f'{dagshub_repo_name}', mlflow=True)
+            mlflow.set_experiment(experiment_name=f"{mlops_exp_name}" )
             mlflow.autolog()
             with mlflow.start_run():
                 best_params = models_best_params[best_model_name]
@@ -186,6 +189,10 @@ def path_joiner(file_path):
     return os.path.join(cwd, file_path)
 
 def main():
+    dagshub_repo_owner = sys.argv[1]
+    dagshub_repo_name = sys.argv[2]
+    mlops_exp_name = sys.argv[3]
+    
     params_file = os.path.join(os.getcwd(), 'config', 'params.yaml')
     config = yaml.safe_load(open(params_file))
 
@@ -212,7 +219,9 @@ def main():
                                  models_params=models_params,
                                  model_save_path=model_save_path)
     
-    model_trainer.initiate_model_training()
+    model_trainer.initiate_model_training(dagshub_repo_owner=dagshub_repo_owner, \
+                                          dagshub_repo_name=dagshub_repo_name, \
+                                          mlops_exp_name=mlops_exp_name)
 
 
 if __name__ == "__main__":
