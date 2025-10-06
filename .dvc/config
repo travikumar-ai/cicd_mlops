@@ -1,7 +1,0 @@
-[core]
-    remote = origin
-[remote "origin"]
-    url = s3://cicd_mlops
-    endpointurl = "https://dagshub.com/travikumar3456/cicd_mlops.s3"
-    access_key_id = "bd529566598b96ed0066c3f49e38eba90426c4ce"
-    secret_access_key = "bd529566598b96ed0066c3f49e38eba90426c4ce"
