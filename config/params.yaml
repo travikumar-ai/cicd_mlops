@@ -16,6 +16,9 @@ data:
     - lunch
     - test_preparation_course
   target_column: math_score
+  remote:
+    origin:
+      access_key_id: ${{secrets.DAGSHUB_ACCESS_KEY}}
 
 src:
   src_path: src
@@ -29,7 +32,10 @@ src:
     model_save_path: src/artifacts/
   preprocessor:
     preprocessor_path: src/artifacts/preprocessor.pkl
-  
+
+remote:
+  origin:
+    access_key_id: ${{secrets.DAGSHUB_ACCESS_KEY}}
 
 models_params: 
   LinearRegression: {}
