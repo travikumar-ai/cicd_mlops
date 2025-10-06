@@ -49,10 +49,11 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{secrets.MLFLOW_TRACKING_USERNAME}}
           MLFLOW_EXP_NAME: ${{secrets.MLFLOW_EXP_NAME}}
         run: |
+          dvc config --local --unset remote.origin
+          dvc config --local --unset remote.origin.auth
           
           dvc remote add -f origin $DAGSHUB_BUCKET_NAME
           dvc remote modify origin endpointurl $DAGSHUB_ENDPOINT_URL
-          dvc remote modify origin --local auth basic
           dvc remote modify origin --local access_key_id $DAGSHUB_USER_NAME
           dvc remote modify origin --local secret_access_key $DAGSHUB_TOKEN
 
