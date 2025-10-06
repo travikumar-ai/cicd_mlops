@@ -49,9 +49,6 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{secrets.MLFLOW_TRACKING_USERNAME}}
           MLFLOW_EXP_NAME: ${{secrets.MLFLOW_EXP_NAME}}
         run: |
-          # dvc remote add -f origin --local auth basic
-          # dvc remote modify origin --local $DAGSHUB_REPO_OWNER
-          # dvc remote modify origin --local $DAGSHUB_TOKEN 
           
           dvc remote add -f origin $DAGSHUB_BUCKET_NAME
           dvc remote modify origin endpointurl $DAGSHUB_ENDPOINT_URL
@@ -59,12 +56,6 @@ jobs:
           dvc remote modify origin --local access_key_id $DAGSHUB_USER_NAME
           dvc remote modify origin --local secret_access_key $DAGSHUB_TOKEN
 
-          # dvc remote add origin 
-          # dvc remote modify origin endpointurl 
-          # dvc remote modify origin --local access_key_id $DAGSHUB_ACCESS_KEY
-          # dvc remote modify origin --local secret_access_key $DAGSHUB_SECRET_KEY
-
-          
           # Configure Git user
           git config --global user.email "totakuriravi@gmail.com"
           git config --global user.name "Ravi Kumar"
